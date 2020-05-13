@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"regexp"
 )
 
 func main() {
@@ -13,14 +13,21 @@ func main() {
 
 func normalizer(phone string) string {
 
-	var buf bytes.Buffer
+	re := regexp.MustCompile("[^0-9]")
 
-	for _, ch := range phone {
-
-		if ch >= '0' && ch <= '9' {
-			buf.WriteRune(ch)
-		}
-
-	}
-	return buf.String()
+	return re.ReplaceAllString(phone, "")
 }
+
+// func normalizer(phone string) string {
+
+// 	var buf bytes.Buffer
+
+// 	for _, ch := range phone {
+
+// 		if ch >= '0' && ch <= '9' {
+// 			buf.WriteRune(ch)
+// 		}
+
+// 	}
+// 	return buf.String()
+// }
