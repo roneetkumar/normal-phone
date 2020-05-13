@@ -18,7 +18,7 @@ func TestNormalizer(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
-			actual := normalizer(tc.input)
+			actual := normalize(tc.input)
 			if actual != tc.want {
 				t.Errorf("got %s; want %s", actual, tc.want)
 			}
