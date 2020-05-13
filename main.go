@@ -16,6 +16,13 @@ const (
 	dbname   = "phone"
 )
 
+type Phone struct {
+	id     int
+	number string
+}
+
+var numbers []string = []string{"1234567890", "123 456 7890", "(123) 456 7890", "(123) 456 - 7890", "123-456-7890", "(123)456-7890"}
+
 func main() {
 
 	fmt.Println("Phone Number Normalizer")
@@ -37,19 +44,76 @@ func main() {
 
 	must(createPhoneNumbersTable(db))
 
-	id, err := insertPhone(db, "0191561212")
+	// for _, num := range numbers {
+	// 	id, err := insertPhone(db, num)
+	// 	must(err)
+	// }
+
+	number, err := getPhone(db, 1)
 
 	must(err)
 
-	fmt.Println(id)
+	fmt.Println("Number is ... ", number)
+
+	phones, err := getAllPhones(db)
+
+	must(err)
+
+	for _, p := range phones {
+		fmt.Printf("%+v\n", p)
+	}
+
+}
+
+func getPhone(db *sql.DB, id int) (string, error) {
+
+	var number string
+
+	stm := `SELECT value FROM phone_numbers WHERE id=$1`
+
+	err := db.QueryRow(stm, id).Scan(&number)
+
+	if err != nil {
+		return "", err
+	}
+
+	return number, nil
+}
+
+func getAllPhones(db *sql.DB) ([]Phone, error) {
+
+	stm := `SELECT id,value FROM phone_numbers`
+
+	rows, err := db.Query(stm)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var dbNumbers []Phone
+
+	for rows.Next() {
+		var p Phone
+		if err := rows.Scan(&p.id, &p.number); err != nil {
+			return nil, err
+		}
+		dbNumbers = append(dbNumbers, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return dbNumbers, err
 
 }
 
 func insertPhone(db *sql.DB, phone string) (int, error) {
 
-	stm := `INSERT INTO phone_numbers(value) VALUES($1) RETURNING id`
-
 	var id int
+
+	stm := `INSERT INTO phone_numbers(value) VALUES($1) RETURNING id`
 
 	err := db.QueryRow(stm, phone).Scan(&id)
 
