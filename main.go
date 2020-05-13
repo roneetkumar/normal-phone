@@ -22,20 +22,61 @@ func main() {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
 
+	// db, err := sql.Open("postgres", psqlInfo)
+	// must(err)
+
+	// err = resetDB(db, dbname)
+	// must(err)
+	// db.Close()
+
+	psqlInfo = fmt.Sprintf("%s dbname=%s", psqlInfo, dbname)
+
 	db, err := sql.Open("postgres", psqlInfo)
+	must(err)
+	defer db.Close()
 
+	must(createPhoneNumbersTable(db))
+
+	id, err := insertPhone(db, "0191561212")
+
+	must(err)
+
+	fmt.Println(id)
+
+}
+
+func insertPhone(db *sql.DB, phone string) (int, error) {
+
+	stm := `INSERT INTO phone_numbers(value) VALUES($1) RETURNING id`
+
+	var id int
+
+	err := db.QueryRow(stm, phone).Scan(&id)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return int(id), err
+}
+
+func createPhoneNumbersTable(db *sql.DB) error {
+
+	stm := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS phone_numbers (
+			id SERIAL,
+			value VARCHAR(255)
+		)
+	`)
+
+	_, err := db.Exec(stm)
+	return err
+}
+
+func must(err error) {
 	if err != nil {
 		panic(err)
 	}
-
-	err = resetDB(db, dbname)
-
-	if err != nil {
-		panic(err)
-	}
-
-	db.Close()
-
 }
 
 func resetDB(db *sql.DB, name string) error {
